@@ -2,8 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 
 import lib.request.headers as headers
-import lib.spider.base_spider as base_spider
 from lib.item.level import Level
+import lib.zone.level as level
 
 
 def getInfo(level):
@@ -84,10 +84,11 @@ if __name__ == "__main__":
     # A: print(data[0])
     # Q: TypeError: 'dict' object is not callable
     # A: data is a list, not a dict
-
-    csv_file = "/{0}.csv".format('level3')
+    level_data = level.get_level()
+    level_chinese = level.get_chinese_level(level_data)
+    csv_file = "/{0}.csv".format(level_chinese)
     with open(csv_file, "w") as f:
-        for level in getInfo(50):
+        for level in getInfo(level_data):
             # Q: AttributeError: 'str' object has no attribute 'text'
             # A: level is a str, not a Level object
             # Q: TypeError: unsupported operand type(s) for +: 'Level' and 'str'
