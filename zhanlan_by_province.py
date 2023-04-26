@@ -4,14 +4,14 @@ import requests
 from bs4 import BeautifulSoup
 
 import lib.request.headers as headers
-from lib.item.level import Level
-import lib.zone.level as level
+import lib.item.province as province
+import lib.zone.province as Province
 
 
-def getInfo(level):
+def getInfo(province_id):
     total_page = 1
-    level_list = list()
-    page = 'http://www.caec.org.cn/newsList.html?id={0}'.format(level)
+    province_list = list()
+    page = 'http://www.caec.org.cn/newsList.html?id={0}'.format(province_id)
     print(page)
     headersData = headers.create_headers()
     response = requests.get(page, timeout=10, headers=headersData)
@@ -24,7 +24,7 @@ def getInfo(level):
     except:
         pass
     for i in range(1, total_page + 1):
-        page = 'http://www.caec.org.cn/newsList.html?id={0}&pageIndex={1}'.format(level, i)
+        page = 'http://www.caec.org.cn/newsList.html?id={0}&pageIndex={1}'.format(province_id, i)
         # print(page)
         headersData = headers.create_headers()
         response = requests.get(page, timeout=10, headers=headersData)
@@ -40,24 +40,35 @@ def getInfo(level):
             link_soup = BeautifulSoup(html, "lxml")
             # 获取标题
             title = link_soup.find('h4', class_='post-title').find('div').text
-            level_list.append(title)
+            province_list.append(title)
             # desc_p_all = link_soup.find('div', class_='post-desc').findAll('p')
             # desc_div_all = link_soup.find('div', class_='post-desc').findAll('div')
             # desc_br_all = link_soup.find('div', class_='post-desc').findAll('br')
+            # for p in desc_p_all:
+            #     print('=====================')
+            #     wenben = p.text.replace('\r', '').replace('\n', '').replace('\t', '').replace(' ', '')
+            #     # wenben 为 空的时候，不打印
+            #     if wenben:
+            #         print(wenben)
             desc_all = link_soup.find('div', class_='post-desc').text
-            desc_data = list()
-            desc_text = desc_all.replace('\r', '').replace('\n', '').replace('\t', '').replace(' ', '')
-            desc_data.append(desc_text)
-            level_data = Level(title, desc_data)
-            print(level_data.text())
-            level_list.append(level_data)
-    return level_list
+            desc_text = desc_all\
+                .replace('\r', '')\
+                .replace('\n', '')\
+                .replace('\t', '')\
+                .replace(' ', '')\
+                .replace('\xa0', '')\
+                .replace('\u200b', '')\
+                .replace('\xad', '')
+            province_data = province.Province(title, desc_text)
+            # print(province_data.text())
+            province_list.append(province_data)
+    return province_list
 
 
 if __name__ == "__main__":
-    # level = 50
+    # province = 50
     # i = 9
-    # page = 'http://www.caec.org.cn/newsList.html?id={0}&pageIndex={1}'.format(level, i)
+    # page = 'http://www.caec.org.cn/newsList.html?id={0}&pageIndex={1}'.format(province, i)
     # print(page)
     # headersData = headers.create_headers()
     # response = requests.get(page, timeout=10, headers=headersData)
@@ -86,21 +97,29 @@ if __name__ == "__main__":
     # A: print(data[0])
     # Q: TypeError: 'dict' object is not callable
     # A: data is a list, not a dict
-    level_data = level.get_level()
-    level_chinese = level.get_chinese_level(level_data)
-    csv_file = os.path.join(os.path.dirname(__file__), level_chinese + ".csv")
+    province_data = Province.get_province()
+    province_chinese = Province.get_chinese_province(province_data)
+    # 将csv_file的路径设置为当前文件夹
+    csv_file = os.path.join(os.path.dirname(__file__), province_chinese + ".csv")
     with open(csv_file, "w") as f:
-        for level in getInfo(level_data):
-            # Q: AttributeError: 'str' object has no attribute 'text'
-            # A: level is a str, not a Level object
-            # Q: TypeError: unsupported operand type(s) for +: 'Level' and 'str'
-            # A: level.text() return a str, not a Level object
-            # Q: TypeError: can only concatenate str (not "Level") to str
-            # A: level.text() return a str, not a Level object
+        provinces = getInfo(province_data)
+        # 获取provinces有多少个元素
+        print("一共{0}条数据".format(len(provinces)))
+        for province in provinces:
             try:
-                data = level.text()
+                data = province.text()
                 f.write(data + "\n")
             except:
+                print("==================================")
+                # 判断province是不是一个list
+                # 如果是str 打印
+                if isinstance(province, str):
+                    print(province)
+                else:
+                    data = province.text()
+                    print(data)
+                    f.write(data + "\n")
+                print("==================================")
                 pass
 
-    print("Finish crawl level: {0} save data to : ".format(level_chinese) + csv_file)
+    print("Finish crawl province: {0} save data to : ".format(province_chinese) + csv_file)
