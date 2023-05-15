@@ -3,7 +3,6 @@ on:
   workflow_dispatch:
 jobs:
   qodana:
-    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
